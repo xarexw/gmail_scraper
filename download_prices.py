@@ -24,12 +24,19 @@ DOWNLOAD_FOLDER = os.getenv("DOWNLOAD_FOLDER")
 labels_to_filename = {
     "Bestparts": "bestparts_price.xlsx",
     "Eminia New": "eminia_new_price.xls",
+    "Eminia Offer": "eminia_offer_price.xls",
     "Masterteile": "masterteile_price.xls", #в них старий формат
     "MaxParts": "maxparts_price.xlsx",
+    "KoreaParts": "koreaparts_price.xlsx",
+    "Natasha": "natasha_price.xlsx",
+    "Sline": "sline_price.xlsx",
+    "STC": "stc_price.xls",
+    "VIS Mercedes": "vis_mercedes_price.xlsx",
     "Mtechno": "mtechno_price.xlsx",
     "Sprint": "sprint_price.xlsx",
     "Sprint All": "sprint_all_price.xlsx",
     "Syndicar": "syndicar_price.zip",
+    "Autonovad": "autonovad_price.zip",
     "Ukrauto": "ukrauto_price.xlsx",
     "Usamotors": "usamotors_price.xlsx",
 }
