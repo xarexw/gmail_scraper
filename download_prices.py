@@ -8,6 +8,18 @@ from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+import json
+from google.cloud import secretmanager
+import os
+
+def load_token_from_secret(secret_name="gmail-token", project_id="priceparsing-462414"):
+    client = secretmanager.SecretManagerServiceClient()
+    secret_path = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
+    response = client.access_secret_version(name=secret_path)
+    token = json.loads(response.payload.data.decode("UTF-8"))
+    return token
+
+
 # --- Налаштування ---
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
@@ -45,14 +57,8 @@ labels_to_filename = {
 labels_to_check = list(labels_to_filename.keys())
 
 def get_drive_service():
-    creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    else:
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
+    token_data = load_token_from_secret()  # Отримуємо токен із Secret Manager
+    creds = Credentials.from_authorized_user_info(token_data, SCOPES)
     return build("drive", "v3", credentials=creds)
 
 
@@ -155,7 +161,6 @@ for label in labels_to_check:
         print(f"Checking mail with id={email_id.decode()} subject: \"{subject}\", label=\"{label}\"")
 
         used_filenames = set()
-        attachments = []
         # --- Проходимо по всіх частинах листа, шукаємо прикріплення ---
         for part in msg.walk():
             # Якщо це контейнер multipart — пропускаємо
@@ -204,18 +209,6 @@ for label in labels_to_check:
             # Унікалізуємо ім’я файлу (+ _1)
             base_name, ext = os.path.splitext(unified_name)
             save_path = os.path.join(DOWNLOAD_FOLDER, unified_name)
-
-            # --- Збереження файлів ---
-            used = set()
-            os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
-            for file_data, unified_name in attachments:
-                base, ext = os.path.splitext(unified_name)
-                name = unified_name
-                i = 1
-                while name in used:
-                    name = f"{base}_{i}{ext}"
-                    i += 1
-                used.add(name)
 
             # Гарантуємо, що папка для зберігання існує
             os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
